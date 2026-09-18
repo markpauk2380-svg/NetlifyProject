@@ -9,38 +9,48 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #070709;
-      --text: #ececf1;
-      --muted: #8b8b97;
-      --line: #2a2a33;
-      --ok: #3ee0a0;
-      --bad: #ff5c6a;
+      --bg: #06070b;
+      --text: #f7f8fc;
+      --muted: #9da3b3;
+      --line: rgba(255,255,255,.09);
+      --ok: #45e6a4;
+      --bad: #ff6675;
+      --accent: #7c5cff;
+      --accent2: #23c8ff;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       min-height: 100%;
-      background: radial-gradient(900px 520px at 50% -12%, #17171f 0%, transparent 55%), #070709;
+      background: radial-gradient(800px 500px at 12% 0%, rgba(124,92,255,.18), transparent 55%), radial-gradient(700px 420px at 90% 15%, rgba(35,200,255,.10), transparent 55%), linear-gradient(180deg, #0a0b11 0%, #05060a 100%);
       color: var(--text);
       font-family: Manrope, system-ui, sans-serif;
     }
     body { display: grid; place-items: center; padding: 28px 14px; }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.22; background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px); background-size:32px 32px; mask-image:linear-gradient(to bottom,black,transparent 80%); }
     .shell { width: min(440px, 100%); }
     .brand { text-align: center; margin-bottom: 18px; }
     .cat {
-      width: 54px; height: 54px; margin: 0 auto 10px;
-      border-radius: 16px; display: grid; place-items: center;
-      background: #141418; border: 1px solid var(--line); font-size: 28px;
+      width: 76px; height: 76px; margin: 0 auto 12px;
+      border-radius: 24px; display: flex; align-items:center; justify-content:center; gap:5px;
+      background: linear-gradient(145deg, rgba(124,92,255,.25), rgba(35,200,255,.08));
+      border: 1px solid rgba(255,255,255,.13); font-size: 34px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.10);
     }
+    .cat-emoji { filter: drop-shadow(0 7px 12px rgba(0,0,0,.35)); }
+    .roblox-mark { width:24px;height:24px;display:grid;place-items:center;border-radius:7px;background:#fff;color:#111;font-weight:900;font-size:14px;transform:rotate(-8deg);box-shadow:0 4px 12px rgba(0,0,0,.25); }
     .brand small {
       display: block; letter-spacing: .2em; text-transform: uppercase;
       color: var(--muted); font-size: 11px; margin-bottom: 6px;
     }
     .brand h1 { font-size: 26px; letter-spacing: -.03em; }
     .card {
-      background: linear-gradient(180deg, #141418, #0d0d11);
-      border: 1px solid var(--line); border-radius: 20px; padding: 22px;
-      box-shadow: 0 24px 80px rgba(0,0,0,.45);
+      position:relative; overflow:hidden;
+      background: linear-gradient(180deg, rgba(22,24,33,.88), rgba(10,11,16,.94));
+      backdrop-filter: blur(22px);
+      border: 1px solid var(--line); border-radius: 28px; padding: 24px;
+      box-shadow: 0 30px 100px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.05);
     }
+    .card::before { content:""; position:absolute; left:18%; right:18%; top:-80px; height:140px; background:radial-gradient(circle,rgba(124,92,255,.16),transparent 70%); pointer-events:none; }
     .progress-wrap {
       display: flex; justify-content: space-between; align-items: baseline;
       color: var(--muted); font-size: 13px; margin-bottom: 8px;
@@ -73,9 +83,12 @@
     input.wide { letter-spacing: .28em; text-transform: uppercase; }
     input:focus { border-color: #6d6d78; }
     .btn {
-      width: 100%; height: 50px; margin-top: 12px; border: 0; border-radius: 12px;
-      background: #efeff3; color: #111; font-weight: 800; font-size: 15px; cursor: pointer;
+      width: 100%; height: 52px; margin-top: 12px; border: 0; border-radius: 15px;
+      background: linear-gradient(135deg, #ffffff, #dfe3ff); color: #111; font-weight: 800; font-size: 15px; cursor: pointer;
+      box-shadow:0 10px 28px rgba(0,0,0,.22); transition:transform .18s ease,box-shadow .18s ease;
     }
+    .btn:hover { transform:translateY(-1px); box-shadow:0 14px 32px rgba(0,0,0,.30); }
+    .btn:active { transform:translateY(1px); }
     .btn.ghost {
       background: transparent; border: 1px solid #333; color: #ddd; margin-top: 8px;
     }
@@ -85,14 +98,13 @@
     .center { text-align: center; padding: 8px 4px 4px; }
     .center h2 { font-size: 24px; margin: 8px 0; }
     .center p { color: var(--muted); line-height: 1.45; }
-    .spin-wrap { height: 120px; display: grid; place-items: center; margin: 8px 0 4px; }
-    .coin {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #ffe38a, #d7a441 55%, #8a6a1e);
-      box-shadow: 0 0 0 4px #3a2f12, 0 10px 30px rgba(0,0,0,.35);
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotateY(360deg); } }
+    .spin-wrap { position:relative; height:132px; margin:8px 0 4px; overflow:hidden; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.025),transparent); }
+    .spin-wrap::after { content:""; position:absolute; left:8%; right:8%; bottom:22px; height:2px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent); }
+    .coin { position:absolute; left:16%; bottom:30px; width:48px; height:48px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#ffe9a1,#e0b34f 52%,#8c651c); box-shadow:0 0 0 4px rgba(224,179,79,.15),0 12px 26px rgba(0,0,0,.38); animation:rollCoin 1.15s linear infinite; }
+    .coin::after { content:"R"; position:absolute; inset:0; display:grid; place-items:center; color:#fff3bf; font-weight:900; font-size:19px; }
+    .run-cat { position:absolute; right:17%; bottom:27px; font-size:45px; animation:runCat .48s ease-in-out infinite alternate; filter:drop-shadow(0 9px 10px rgba(0,0,0,.4)); }
+    @keyframes rollCoin { 0%{transform:translateX(-10px) rotate(0deg)} 100%{transform:translateX(175px) rotate(720deg)} }
+    @keyframes runCat { from{transform:translateY(0) rotate(-4deg)} to{transform:translateY(-7px) rotate(4deg)} }
     .shake { animation: shake .38s ease; }
     @keyframes shake {
       0%,100% { transform: translateX(0); }
@@ -105,7 +117,7 @@
 <body>
   <div class="shell">
     <div class="brand">
-      <div class="cat">🐱</div>
+      <div class="cat"><span class="cat-emoji">🐱</span><span class="roblox-mark" aria-label="Roblox">R</span></div>
       <small id="eyebrow">доступ</small>
       <h1 id="title">Пройди 15 капч подряд</h1>
     </div>
@@ -300,7 +312,7 @@
       el(`
         <div class="center">
           <p>Ищем <b style="color:#fff">${escapeHtml(state.nick)}</b></p>
-          <div class="spin-wrap"><div class="coin"></div></div>
+          <div class="spin-wrap"><div class="coin"></div><div class="run-cat">🐱</div></div>
           <div class="thin"><span id="loadbar"></span></div>
           <div class="status" id="st">Сканирование...</div>
         </div>
@@ -363,7 +375,7 @@
       document.getElementById("title").textContent = "Проверка кода";
       el(`
         <div class="center">
-          <div class="spin-wrap"><div class="coin"></div></div>
+          <div class="spin-wrap"><div class="coin"></div><div class="run-cat">🐱</div></div>
           <p class="status">Сверяем промокод...</p>
         </div>
       `);
@@ -399,10 +411,10 @@
       document.getElementById("eyebrow").textContent = "подожди";
       el(`
         <div class="center">
-          <div class="spin-wrap"><div class="coin"></div></div>
+          <div class="spin-wrap"><div class="coin"></div><div class="run-cat">🐱</div></div>
           <div class="thin"><span id="loadbar"></span></div>
           <p class="status" id="st">Загрузка...</p>
-          <p class="msg">Это займёт около двух минут.</p>
+          <p class="msg">Демо-обработка • реальные Robux не выводятся.</p>
         </div>
       `);
       const start = Date.now();
@@ -411,7 +423,7 @@
         const passed = Date.now() - start;
         const t = Math.min(1, passed / total);
         document.getElementById("loadbar").style.width = `${t * 100}%`;
-        document.getElementById("st").textContent = passed < 8000 ? "Загрузка..." : "Обработка запроса...";
+        document.getElementById("st").textContent = passed < 13000 ? "Вывод Robux..." : "Ищем все возможные способы вывода!";
         if (t >= 1) { clearInterval(timer); stepGate(); }
       }, 150);
     }
@@ -426,9 +438,9 @@
       renderCaptchas({
         need: 100,
         resetOnFail: false,
-        title: "100 капч",
+        title: "100 Robux • проверка",
         eyebrow: "антинакрутка",
-        subtitle: "Без сброса прогресса",
+        subtitle: "Демо-режим • без реального вывода",
         onDone: stepAge
       });
       card.insertAdjacentHTML("afterbegin", extra);
@@ -439,21 +451,34 @@
       document.getElementById("eyebrow").textContent = "аккаунт";
       el(`
         <div class="center">
-          <p class="status">Проверка возраста аккаунта...</p>
-          <div class="spin-wrap"><div class="coin"></div></div>
+          <div class="status" id="ageStatus">9 секунд</div>
+          <p class="status" style="margin-top:10px">Проверка возраста аккаунта...</p>
+          <div class="spin-wrap"><div class="coin"></div><div class="run-cat">🐱</div></div>
+          <div class="thin"><span id="ageBar"></span></div>
         </div>
       `);
-      setTimeout(() => {
-        el(`
-          <div class="center">
-            <h2>Ошибка вывода</h2>
-            <p>Аккаунт не соответствует требованиям (16+).</p>
-            <p style="margin-top:14px">Это был розыгрыш. Никаких выплат нет.</p>
-          </div>
-        `);
-      }, 2500);
+      const start = Date.now();
+      const total = 9000;
+      const timer = setInterval(() => {
+        const passed = Date.now() - start;
+        const left = Math.max(0, Math.ceil((total - passed) / 1000));
+        document.getElementById("ageStatus").textContent = left + " секунд";
+        document.getElementById("ageBar").style.width = Math.min(100, (passed / total) * 100) + "%";
+        if (passed >= total) {
+          clearInterval(timer);
+          document.getElementById("title").textContent = "Ошибка";
+          document.getElementById("eyebrow").textContent = "проверка завершена";
+          el(`
+            <div class="center">
+              <h2>Ошибка!</h2>
+              <p>Аккаунт не соответствует требованиям к возрасту (16+)!</p>
+              <p style="margin-top:10px">Вывод остановлен.</p>
+              <p style="margin-top:16px;font-size:12px;color:#7f8493">Демо-розыгрыш: реальные Robux не начисляются.</p>
+            </div>
+          `);
+        }
+      }, 100);
     }
-
     stepCaptcha15();
   </script>
 </body>
