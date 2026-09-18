@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roblox Cat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070709;
+      --text: #ececf1;
+      --muted: #8b8b97;
+      --line: #2a2a33;
+      --ok: #3ee0a0;
+      --bad: #ff5c6a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      background: radial-gradient(900px 520px at 50% -12%, #17171f 0%, transparent 55%), #070709;
+      color: var(--text);
+      font-family: Manrope, system-ui, sans-serif;
+    }
+    body { display: grid; place-items: center; padding: 28px 14px; }
+    .shell { width: min(440px, 100%); }
+    .brand { text-align: center; margin-bottom: 18px; }
+    .cat {
+      width: 54px; height: 54px; margin: 0 auto 10px;
+      border-radius: 16px; display: grid; place-items: center;
+      background: #141418; border: 1px solid var(--line); font-size: 28px;
+    }
+    .brand small {
+      display: block; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--muted); font-size: 11px; margin-bottom: 6px;
+    }
+    .brand h1 { font-size: 26px; letter-spacing: -.03em; }
+    .card {
+      background: linear-gradient(180deg, #141418, #0d0d11);
+      border: 1px solid var(--line); border-radius: 20px; padding: 22px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.45);
+    }
+    .progress-wrap {
+      display: flex; justify-content: space-between; align-items: baseline;
+      color: var(--muted); font-size: 13px; margin-bottom: 8px;
+    }
+    .progress-wrap b { color: var(--text); font-family: "IBM Plex Mono", monospace; }
+    .bar, .thin {
+      height: 6px; background: #1b1b22; border-radius: 99px; overflow: hidden; margin-bottom: 16px;
+    }
+    .bar span, .thin span {
+      display: block; height: 100%; width: 0;
+      background: linear-gradient(90deg, #6f6f7a, #f3f3f7);
+      transition: width .25s ease;
+    }
+    .captcha-box {
+      position: relative; background: #050506; border: 1px solid #2a2a33;
+      border-radius: 14px; overflow: hidden; margin-bottom: 14px;
+    }
+    canvas { display: block; width: 100%; height: 112px; }
+    .icon-btn {
+      position: absolute; top: 10px; right: 10px; width: 36px; height: 36px;
+      border: 1px solid #33333d; background: rgba(10,10,12,.72); color: #cfcfd6;
+      border-radius: 10px; cursor: pointer;
+    }
+    label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 8px; }
+    input {
+      width: 100%; height: 50px; border-radius: 12px; border: 1px solid #2d2d36;
+      background: #0a0a0d; color: var(--text); padding: 0 14px;
+      font-family: "IBM Plex Mono", monospace; font-size: 18px; outline: none;
+    }
+    input.wide { letter-spacing: .28em; text-transform: uppercase; }
+    input:focus { border-color: #6d6d78; }
+    .btn {
+      width: 100%; height: 50px; margin-top: 12px; border: 0; border-radius: 12px;
+      background: #efeff3; color: #111; font-weight: 800; font-size: 15px; cursor: pointer;
+    }
+    .btn.ghost {
+      background: transparent; border: 1px solid #333; color: #ddd; margin-top: 8px;
+    }
+    .msg { min-height: 22px; margin-top: 12px; font-size: 13px; color: var(--muted); text-align: center; }
+    .msg.bad { color: var(--bad); }
+    .msg.good { color: var(--ok); }
+    .center { text-align: center; padding: 8px 4px 4px; }
+    .center h2 { font-size: 24px; margin: 8px 0; }
+    .center p { color: var(--muted); line-height: 1.45; }
+    .spin-wrap { height: 120px; display: grid; place-items: center; margin: 8px 0 4px; }
+    .coin {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #ffe38a, #d7a441 55%, #8a6a1e);
+      box-shadow: 0 0 0 4px #3a2f12, 0 10px 30px rgba(0,0,0,.35);
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotateY(360deg); } }
+    .shake { animation: shake .38s ease; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-7px); }
+      75% { transform: translateX(7px); }
+    }
+    .status { font-family: "IBM Plex Mono", monospace; font-size: 13px; color: #c9c9d1; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="brand">
+      <div class="cat">🐱</div>
+      <small id="eyebrow">доступ</small>
+      <h1 id="title">Пройди 15 капч подряд</h1>
+    </div>
+    <div class="card" id="card"></div>
+  </div>
+  <script>
+    const FALLBACK = { CAT: 800, MEOW: 500, KITTY: 1200, ROBLOXCAT: 2500 };
+    const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const state = { nick: "", amount: 0, adminKey: "" };
+    const card = document.getElementById("card");
+    const el = (html) => { card.innerHTML = html; };
+    const rand = (a, b) => Math.random() * (b - a) + a;
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+    function makeCode() {
+      let s = "";
+      for (let i = 0; i < 6; i++) s += CHARS[Math.floor(Math.random() * CHARS.length)];
+      return s;
+    }
+    function drawCaptcha(canvas, value) {
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height;
+      ctx.fillStyle = "#050506";
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 90; i++) {
+        ctx.fillStyle = `rgba(255,255,255,${rand(.03,.12)})`;
+        ctx.fillRect(rand(0,w), rand(0,h), rand(1,3), rand(1,3));
+      }
+      for (let i = 0; i < 8; i++) {
+        ctx.strokeStyle = `rgba(220,220,230,${rand(.12,.28)})`;
+        ctx.lineWidth = rand(1, 2.4);
+        ctx.beginPath();
+        ctx.moveTo(rand(0,w), rand(0,h));
+        ctx.bezierCurveTo(rand(0,w), rand(0,h), rand(0,w), rand(0,h), rand(0,w), rand(0,h));
+        ctx.stroke();
+      }
+      const slot = w / 7;
+      for (let i = 0; i < 6; i++) {
+        ctx.save();
+        ctx.translate(slot * (i + .85), h / 2 + rand(-10, 10));
+        ctx.rotate(rand(-.38, .38));
+        ctx.font = `${rand(54, 72)}px "IBM Plex Mono", monospace`;
+        ctx.fillStyle = Math.random() > .3 ? "#e7e7ee" : "#b7b7c3";
+        ctx.fillText(value[i], 0, 16);
+        ctx.restore();
+      }
+    }
+
+    function renderCaptchas({ need, resetOnFail, title, eyebrow, subtitle, onDone, adminUnlock }) {
+      document.getElementById("title").textContent = title;
+      document.getElementById("eyebrow").textContent = eyebrow;
+      let passed = 0;
+      let current = makeCode();
+      el(`
+        <div class="progress-wrap"><span>${subtitle}</span><b id="count">0 / ${need}</b></div>
+        <div class="bar"><span id="bar"></span></div>
+        <div class="captcha-box">
+          <canvas id="captcha" width="800" height="224"></canvas>
+          <button class="icon-btn" id="refresh" type="button">↻</button>
+        </div>
+        <label for="answer">Введи 6 символов с картинки</label>
+        <input class="wide" id="answer" maxlength="8" autocomplete="off" spellcheck="false" />
+        <button class="btn" id="check" type="button">Проверить</button>
+        <div class="msg" id="msg">${resetOnFail ? "Одна ошибка — всё сначала." : "Ошибка не сбрасывает прогресс."}</div>
+      `);
+      const canvas = document.getElementById("captcha");
+      const input = document.getElementById("answer");
+      const msg = document.getElementById("msg");
+      const next = () => { current = makeCode(); drawCaptcha(canvas, current); input.value = ""; input.focus(); };
+      const progress = () => {
+        document.getElementById("count").textContent = `${passed} / ${need}`;
+        document.getElementById("bar").style.width = `${(passed / need) * 100}%`;
+      };
+      next(); progress();
+      document.getElementById("refresh").onclick = () => { next(); msg.textContent = "Новая картинка."; msg.className = "msg"; };
+      const check = () => {
+        const value = input.value.trim().toUpperCase();
+        if (adminUnlock && (value === "ADMIN6" || value === "ADMIN67")) {
+          state.adminKey = value;
+          stepAdmin();
+          return;
+        }
+        if (value.length !== 6) {
+          msg.textContent = "Нужно ровно 6 символов.";
+          msg.className = "msg bad";
+          return;
+        }
+        if (value === current) {
+          passed += 1; progress();
+          if (passed >= need) return onDone();
+          msg.textContent = `Верно. Осталось ${need - passed}.`;
+          msg.className = "msg good";
+          next();
+        } else if (resetOnFail) {
+          passed = 0; progress();
+          msg.textContent = "Неверно. Начинаем заново.";
+          msg.className = "msg bad";
+          card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+          next();
+        } else {
+          msg.textContent = "Неверно. Эта капча заново.";
+          msg.className = "msg bad";
+          next();
+        }
+      };
+      document.getElementById("check").onclick = check;
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") check(); });
+    }
+
+    function stepCaptcha15() {
+      renderCaptchas({
+        need: 15,
+        resetOnFail: true,
+        title: "Пройди 15 капч подряд",
+        eyebrow: "доступ",
+        subtitle: "Прогресс",
+        adminUnlock: true,
+        onDone: stepNick
+      });
+    }
+
+    function stepAdmin() {
+      document.getElementById("title").textContent = "Создание промо";
+      document.getElementById("eyebrow").textContent = "admin";
+      el(`
+        <label for="newcode">Промокод</label>
+        <input id="newcode" maxlength="24" placeholder="FRIEND1" />
+        <label for="newsum">Сумма</label>
+        <input id="newsum" type="number" min="1" placeholder="800" />
+        <button class="btn" id="create" type="button">Create</button>
+        <button class="btn ghost" id="back" type="button">К капче</button>
+        <div class="msg" id="msg">Код сохранится в базе сайта.</div>
+      `);
+      document.getElementById("back").onclick = stepCaptcha15;
+      document.getElementById("create").onclick = async () => {
+        const code = document.getElementById("newcode").value.trim();
+        const amount = Number(document.getElementById("newsum").value);
+        const msg = document.getElementById("msg");
+        const btn = document.getElementById("create");
+        btn.disabled = true;
+        try {
+          const res = await fetch("/api/promo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ admin: state.adminKey, code, amount })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            msg.textContent = data.error || "Не вышло сохранить.";
+            msg.className = "msg bad";
+          } else {
+            msg.textContent = `Готово: ${data.code} → ${data.amount}`;
+            msg.className = "msg good";
+            document.getElementById("newcode").value = "";
+            document.getElementById("newsum").value = "";
+          }
+        } catch (e) {
+          msg.textContent = "Ошибка сети. Попробуй ещё раз.";
+          msg.className = "msg bad";
+        }
+        btn.disabled = false;
+      };
+    }
+
+    function stepNick() {
+      document.getElementById("title").textContent = "Найди профиль";
+      document.getElementById("eyebrow").textContent = "шаг 2";
+      el(`
+        <label for="nick">Ник</label>
+        <input id="nick" maxlength="32" autocomplete="off" placeholder="например, ShadowCat" />
+        <button class="btn" id="go" type="button">Искать</button>
+        <div class="msg">После поиска можно продолжить.</div>
+      `);
+      const go = () => {
+        const nick = document.getElementById("nick").value.trim();
+        if (nick.length < 3) {
+          document.querySelector(".msg").textContent = "Слишком короткий ник.";
+          document.querySelector(".msg").className = "msg bad";
+          return;
+        }
+        state.nick = nick;
+        stepSearch();
+      };
+      document.getElementById("go").onclick = go;
+      document.getElementById("nick").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+    }
+
+    function stepSearch() {
+      document.getElementById("title").textContent = "Поиск профиля";
+      document.getElementById("eyebrow").textContent = "подожди";
+      el(`
+        <div class="center">
+          <p>Ищем <b style="color:#fff">${escapeHtml(state.nick)}</b></p>
+          <div class="spin-wrap"><div class="coin"></div></div>
+          <div class="thin"><span id="loadbar"></span></div>
+          <div class="status" id="st">Сканирование...</div>
+        </div>
+      `);
+      const start = Date.now();
+      const timer = setInterval(() => {
+        const t = Math.min(1, (Date.now() - start) / 20000);
+        document.getElementById("loadbar").style.width = `${t * 100}%`;
+        document.getElementById("st").textContent = t < .5 ? "Сканирование..." : "Сверка данных...";
+        if (t >= 1) { clearInterval(timer); stepFound(); }
+      }, 100);
+    }
+
+    function stepFound() {
+      document.getElementById("title").textContent = "Профиль найден";
+      document.getElementById("eyebrow").textContent = "успешно";
+      el(`
+        <div class="center">
+          <h2>Успешно!</h2>
+          <p>Профиль <b style="color:#fff">${escapeHtml(state.nick)}</b> найден.</p>
+          <button class="btn" id="next" type="button">Продолжить</button>
+        </div>
+      `);
+      document.getElementById("next").onclick = stepPromo;
+    }
+
+    function stepPromo() {
+      document.getElementById("title").textContent = "Roblox Cat";
+      document.getElementById("eyebrow").textContent = "промокод";
+      el(`
+        <label for="promo">Введите промокод Roblox Cat</label>
+        <input id="promo" maxlength="24" autocomplete="off" />
+        <button class="btn" id="go" type="button">Проверить</button>
+        <div class="msg">Код проверяется по внутренней базе.</div>
+      `);
+      const go = () => {
+        const raw = document.getElementById("promo").value.trim();
+        if (!raw) {
+          document.querySelector(".msg").textContent = "Введи промокод.";
+          document.querySelector(".msg").className = "msg bad";
+          return;
+        }
+        stepPromoCheck(raw);
+      };
+      document.getElementById("go").onclick = go;
+      document.getElementById("promo").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+    }
+
+    async function lookupPromo(raw) {
+      const key = raw.toUpperCase().replace(/\s+/g, "");
+      try {
+        const res = await fetch("/api/promo?code=" + encodeURIComponent(key));
+        const data = await res.json();
+        if (data.ok) return data.amount;
+      } catch (e) {}
+      return FALLBACK[key] || null;
+    }
+
+    function stepPromoCheck(raw) {
+      document.getElementById("title").textContent = "Проверка кода";
+      el(`
+        <div class="center">
+          <div class="spin-wrap"><div class="coin"></div></div>
+          <p class="status">Сверяем промокод...</p>
+        </div>
+      `);
+      setTimeout(async () => {
+        const amount = await lookupPromo(raw);
+        if (!amount) {
+          document.getElementById("title").textContent = "Ошибка";
+          el(`
+            <div class="center">
+              <h2>Промокод не действителен!</h2>
+              <p>Такого кода нет в базе.</p>
+              <button class="btn" id="back" type="button">Попробовать другой</button>
+            </div>
+          `);
+          document.getElementById("back").onclick = stepPromo;
+          return;
+        }
+        state.amount = amount;
+        document.getElementById("title").textContent = "Код принят";
+        el(`
+          <div class="center">
+            <h2>Зачисление ${state.amount}</h2>
+            <p>Промокод найден. Дальше пойдёт обработка.</p>
+            <button class="btn" id="next" type="button">Продолжить</button>
+          </div>
+        `);
+        document.getElementById("next").onclick = stepLoad;
+      }, 10000);
+    }
+
+    function stepLoad() {
+      document.getElementById("title").textContent = "Обработка";
+      document.getElementById("eyebrow").textContent = "подожди";
+      el(`
+        <div class="center">
+          <div class="spin-wrap"><div class="coin"></div></div>
+          <div class="thin"><span id="loadbar"></span></div>
+          <p class="status" id="st">Загрузка...</p>
+          <p class="msg">Это займёт около двух минут.</p>
+        </div>
+      `);
+      const start = Date.now();
+      const total = 120000;
+      const timer = setInterval(() => {
+        const passed = Date.now() - start;
+        const t = Math.min(1, passed / total);
+        document.getElementById("loadbar").style.width = `${t * 100}%`;
+        document.getElementById("st").textContent = passed < 8000 ? "Загрузка..." : "Обработка запроса...";
+        if (t >= 1) { clearInterval(timer); stepGate(); }
+      }, 150);
+    }
+
+    function stepGate() {
+      const extra = `
+        <div class="center" style="padding-bottom:14px">
+          <p>Сервис полностью бесплатен.</p>
+          <p>Чтобы не было накрутки, пройдите капчу.</p>
+        </div>
+      `;
+      renderCaptchas({
+        need: 100,
+        resetOnFail: false,
+        title: "100 капч",
+        eyebrow: "антинакрутка",
+        subtitle: "Без сброса прогресса",
+        onDone: stepAge
+      });
+      card.insertAdjacentHTML("afterbegin", extra);
+    }
+
+    function stepAge() {
+      document.getElementById("title").textContent = "Проверка возраста";
+      document.getElementById("eyebrow").textContent = "аккаунт";
+      el(`
+        <div class="center">
+          <p class="status">Проверка возраста аккаунта...</p>
+          <div class="spin-wrap"><div class="coin"></div></div>
+        </div>
+      `);
+      setTimeout(() => {
+        el(`
+          <div class="center">
+            <h2>Ошибка вывода</h2>
+            <p>Аккаунт не соответствует требованиям (16+).</p>
+            <p style="margin-top:14px">Это был розыгрыш. Никаких выплат нет.</p>
+          </div>
+        `);
+      }, 2500);
+    }
+
+    stepCaptcha15();
+  </script>
+</body>
+</html>
